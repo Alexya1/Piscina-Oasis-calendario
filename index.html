@@ -9,7 +9,7 @@
   <title>Calendario Del Oasis de Barranquilla</title>
   <style>
     * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-    body { margin: 0; background: #0f172a; color: #0f172a; padding: 14px; min-height: 100vh; }
+    body { margin: 0; background: #041524; color: #0f172a; padding: 14px; min-height: 100vh; }
 
     .container {
       position: relative;
@@ -18,11 +18,11 @@
       border-radius: 18px;
       padding: 18px;
       overflow: hidden;
-      box-shadow: 0 8px 28px rgba(0, 0, 0, 0.35);
-      background-color: #082f49;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+      background-color: #062840;
     }
 
-    /* Foto de la piscina más visible */
+    /* Foto de la piscina bien visible */
     .container::before {
       content: "";
       position: absolute;
@@ -30,7 +30,17 @@
       background-image: url("./piscina.jpg");
       background-size: cover;
       background-position: center;
-      opacity: 0.55;
+      opacity: 0.78;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    /* Oscurecedor suave para que los números y títulos resalten sobre la foto */
+    .container::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, rgba(4, 21, 36, 0.42) 0%, rgba(4, 21, 36, 0.28) 50%, rgba(4, 21, 36, 0.48) 100%);
       z-index: 0;
       pointer-events: none;
     }
@@ -43,7 +53,7 @@
       font-size: 20px;
       font-weight: 800;
       color: #ffffff;
-      text-shadow: 0 2px 8px rgba(0, 0, 0, 0.65);
+      text-shadow: 0 2px 10px rgba(0, 0, 0, 0.85);
       letter-spacing: 0.3px;
     }
 
@@ -57,11 +67,11 @@
       font-size: 16px;
       font-weight: bold;
       cursor: pointer;
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.45);
     }
     header button:disabled {
-      background: rgba(148, 163, 184, 0.55);
-      color: #e2e8f0;
+      background: rgba(15, 23, 42, 0.55);
+      color: rgba(255, 255, 255, 0.45);
       cursor: not-allowed;
       box-shadow: none;
     }
@@ -70,15 +80,15 @@
       font-size: 18px;
       text-transform: capitalize;
       color: #ffffff;
-      text-shadow: 0 2px 8px rgba(0, 0, 0, 0.65);
+      text-shadow: 0 2px 10px rgba(0, 0, 0, 0.85);
     }
 
     .weekdays, .days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; text-align: center; }
     .weekdays div {
       font-weight: 700;
       font-size: 13px;
-      color: #f8fafc;
-      text-shadow: 0 1px 5px rgba(0, 0, 0, 0.75);
+      color: #ffffff;
+      text-shadow: 0 1px 6px rgba(0, 0, 0, 0.9);
       padding-bottom: 6px;
     }
 
@@ -88,20 +98,19 @@
       align-items: center;
       justify-content: center;
       border-radius: 10px;
-      background: rgba(255, 255, 255, 0.74);
-      border: 1px solid rgba(255, 255, 255, 0.65);
+      background: rgba(255, 255, 255, 0.65);
+      border: 1px solid rgba(255, 255, 255, 0.75);
       color: #0f172a;
       font-weight: 800;
       font-size: 16px;
       cursor: pointer;
       user-select: none;
-      backdrop-filter: blur(2px);
     }
-    .day.empty { background: transparent; border: none; cursor: default; backdrop-filter: none; }
+    .day.empty { background: transparent; border: none; cursor: default; }
     .day.past {
-      background: rgba(15, 23, 42, 0.48);
-      border-color: rgba(255, 255, 255, 0.18);
-      color: rgba(241, 245, 249, 0.55);
+      background: rgba(15, 23, 42, 0.52);
+      border-color: rgba(255, 255, 255, 0.2);
+      color: rgba(255, 255, 255, 0.55);
       cursor: not-allowed;
     }
     .day.booked {
@@ -117,7 +126,7 @@
       font-size: 12px;
       text-align: center;
       color: #ffffff;
-      text-shadow: 0 1px 6px rgba(0, 0, 0, 0.8);
+      text-shadow: 0 1px 6px rgba(0, 0, 0, 0.9);
       font-weight: 700;
     }
 
@@ -126,7 +135,7 @@
       display: none;
       position: fixed;
       inset: 0;
-      background: rgba(15, 23, 42, 0.72);
+      background: rgba(15, 23, 42, 0.75);
       align-items: center;
       justify-content: center;
       padding: 14px;
