@@ -296,4 +296,283 @@
 </div>
 
 <div class="lightbox" id="lightbox" title="Toca para cerrar">
-  <img id="lightboxImg"
+  <img id="lightboxImg" src="" alt="Comprobante ampliado" />
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import { getDatabase, ref, onValue, set, remove } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyCdxQ-06sxgPet72sIxtLul0D6YGjm-uh0",
+    authDomain: "calendario-de-picina.firebaseapp.com",
+    databaseURL: "https://calendario-de-picina-default-rtdb.firebaseio.com",
+    projectId: "calendario-de-picina",
+    storageBucket: "calendario-de-picina.firebasestorage.app",
+    messagingSenderId: "921723174722",
+    appId: "1:921723174722:web:7e04a94d0f4d6dad65d2db"
+  };
+
+  const monthYearEl = document.getElementById("monthYear");
+  const calendarDaysEl = document.getElementById("calendarDays");
+  const syncStatusEl = document.getElementById("syncStatus");
+  const prevMonthBtn = document.getElementById("prevMonth");
+  const modalBackdrop = document.getElementById("modalBackdrop");
+  const modalDateTitle = document.getElementById("modalDateTitle");
+  const clientNameInput = document.getElementById("clientName");
+  const clientPhoneInput = document.getElementById("clientPhone");
+  const clientNotesInput = document.getElementById("clientNotes");
+  const receiptInput = document.getElementById("receiptInput");
+  const uploadLabel = document.getElementById("uploadLabel");
+  const previewBox = document.getElementById("previewBox");
+  const receiptPreview = document.getElementById("receiptPreview");
+  const removeImgBtn = document.getElementById("removeImgBtn");
+  const saveBtn = document.getElementById("saveBtn");
+  const deleteBtn = document.getElementById("deleteBtn");
+  const lightbox = document.getElementById("lightbox");
+  const lightboxImg = document.getElementById("lightboxImg");
+
+  const now = new Date();
+  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const minYear = now.getFullYear();
+  const minMonth = now.getMonth();
+
+  let currentDate = new Date(minYear, minMonth, 1);
+  let bookingsData = {};
+  let selectedDateKey = null;
+  let currentReceiptBase64 = "";
+
+  function isBeforeCurrentMonth(year, month) {
+    return year < minYear || (year === minYear && month < minMonth);
+  }
+
+  function updatePrevButtonState() {
+    prevMonthBtn.disabled = isBeforeCurrentMonth(currentDate.getFullYear(), currentDate.getMonth() - 1);
+  }
+
+  function renderCalendar() {
+    calendarDaysEl.innerHTML = "";
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth();
+
+    updatePrevButtonState();
+
+    const monthName = new Date(year, month).toLocaleDateString("es-ES", { month: "long", year: "numeric" });
+    monthYearEl.textContent = monthName;
+
+    const firstDayIndex = new Date(year, month, 1).getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+    for (let i = 0; i < firstDayIndex; i++) {
+      const emptyDiv = document.createElement("div");
+      emptyDiv.className = "day empty";
+      calendarDaysEl.appendChild(emptyDiv);
+    }
+
+    for (let day = 1; day <= daysInMonth; day++) {
+      const dateKey = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+      const dayDate = new Date(year, month, day);
+      const isPastDay = dayDate < todayStart;
+
+      const dayDiv = document.createElement("div");
+      dayDiv.className = "day";
+      dayDiv.textContent = day;
+
+      if (isPastDay) {
+        dayDiv.classList.add("past");
+      } else {
+        if (bookingsData[dateKey]) {
+          dayDiv.classList.add("booked");
+        }
+        dayDiv.addEventListener("click", () => openModal(dateKey, day, monthName));
+      }
+
+      calendarDaysEl.appendChild(dayDiv);
+    }
+  }
+
+  renderCalendar();
+
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+  const bookingsRef = ref(db, "reservas");
+
+  async function cleanPastBookings(data) {
+    for (const dateKey of Object.keys(data)) {
+      const parts = dateKey.split("-");
+      if (parts.length === 3) {
+        const bookingDate = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+        if (bookingDate < todayStart) {
+          await remove(ref(db, `reservas/${dateKey}`));
+        }
+      }
+    }
+  }
+
+  onValue(bookingsRef, (snapshot) => {
+    const rawData = snapshot.val() || {};
+    cleanPastBookings(rawData);
+    bookingsData = rawData;
+    syncStatusEl.textContent = "Sincronizado en tiempo real";
+    renderCalendar();
+  }, (err) => {
+    syncStatusEl.textContent = "Error de conexión con Firebase";
+    console.error(err);
+  });
+
+  function setReceiptUI(base64Str) {
+    currentReceiptBase64 = base64Str || "";
+    if (currentReceiptBase64) {
+      receiptPreview.src = currentReceiptBase64;
+      previewBox.classList.add("visible");
+      uploadLabel.textContent = "Cambiar capture del pago";
+    } else {
+      receiptPreview.src = "";
+      previewBox.classList.remove("visible");
+      uploadLabel.textContent = "+ Subir capture del pago";
+    }
+    receiptInput.value = "";
+  }
+
+  function compressImage(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          const maxDim = 950;
+          let width = img.width;
+          let height = img.height;
+          if (width > maxDim || height > maxDim) {
+            if (width > height) {
+              height = Math.round((height * maxDim) / width);
+              width = maxDim;
+            } else {
+              width = Math.round((width * maxDim) / height);
+              height = maxDim;
+            }
+          }
+          const canvas = document.createElement("canvas");
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext("2d");
+          ctx.drawImage(img, 0, 0, width, height);
+          resolve(canvas.toDataURL("image/jpeg", 0.72));
+        };
+        img.onerror = reject;
+        img.src = e.target.result;
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
+
+  receiptInput.addEventListener("change", async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    uploadLabel.textContent = "Procesando capture...";
+    try {
+      const compressed = await compressImage(file);
+      setReceiptUI(compressed);
+    } catch {
+      alert("No se pudo cargar esa imagen. Intenta con otra.");
+      setReceiptUI("");
+    }
+  });
+
+  removeImgBtn.addEventListener("click", () => {
+    setReceiptUI("");
+  });
+
+  receiptPreview.addEventListener("click", () => {
+    if (currentReceiptBase64) {
+      lightboxImg.src = currentReceiptBase64;
+      lightbox.classList.add("active");
+    }
+  });
+
+  lightbox.addEventListener("click", () => {
+    lightbox.classList.remove("active");
+    lightboxImg.src = "";
+  });
+
+  function openModal(dateKey, day, monthName) {
+    selectedDateKey = dateKey;
+    modalDateTitle.textContent = `${day} de ${monthName}`;
+    const existing = bookingsData[dateKey];
+
+    if (existing) {
+      clientNameInput.value = existing.name || "";
+      clientPhoneInput.value = existing.phone || "";
+      clientNotesInput.value = existing.notes || "";
+      setReceiptUI(existing.receipt || "");
+      deleteBtn.style.display = "block";
+    } else {
+      clientNameInput.value = "";
+      clientPhoneInput.value = "";
+      clientNotesInput.value = "";
+      setReceiptUI("");
+      deleteBtn.style.display = "none";
+    }
+    modalBackdrop.classList.add("active");
+  }
+
+  function closeModal() {
+    modalBackdrop.classList.remove("active");
+    selectedDateKey = null;
+  }
+
+  saveBtn.addEventListener("click", async () => {
+    if (!selectedDateKey) return;
+    const name = clientNameInput.value.trim();
+    const phone = clientPhoneInput.value.trim();
+    const notes = clientNotesInput.value.trim();
+
+    if (!name) {
+      alert("Escribe al menos el nombre de la persona.");
+      return;
+    }
+
+    saveBtn.disabled = true;
+    saveBtn.textContent = "Guardando...";
+    try {
+      await set(ref(db, `reservas/${selectedDateKey}`), {
+        name,
+        phone,
+        notes,
+        receipt: currentReceiptBase64
+      });
+      closeModal();
+    } finally {
+      saveBtn.disabled = false;
+      saveBtn.textContent = "Guardar";
+    }
+  });
+
+  deleteBtn.addEventListener("click", async () => {
+    if (!selectedDateKey) return;
+    if (confirm("¿Liberar esta fecha para que quede disponible de nuevo?")) {
+      await remove(ref(db, `reservas/${selectedDateKey}`));
+      closeModal();
+    }
+  });
+
+  document.getElementById("closeBtn").addEventListener("click", closeModal);
+  prevMonthBtn.addEventListener("click", () => {
+    const prevMonthDate = new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1);
+    if (!isBeforeCurrentMonth(prevMonthDate.getFullYear(), prevMonthDate.getMonth())) {
+      currentDate = prevMonthDate;
+      renderCalendar();
+    }
+  });
+  document.getElementById("nextMonth").addEventListener("click", () => {
+    currentDate = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1);
+    renderCalendar();
+  });
+
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("./sw.js").catch(() => {});
+  }
+</script>
+</body>
+</html>
