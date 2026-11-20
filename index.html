@@ -22,7 +22,7 @@
       background-color: #062840;
     }
 
-    /* Foto de la piscina bien visible */
+    /* Foto de la piscina de fondo */
     .container::before {
       content: "";
       position: absolute;
@@ -30,17 +30,17 @@
       background-image: url("./piscina.jpg");
       background-size: cover;
       background-position: center;
-      opacity: 0.78;
+      opacity: 0.85;
       z-index: 0;
       pointer-events: none;
     }
 
-    /* Oscurecedor suave para que los números y títulos resalten sobre la foto */
+    /* Capa suave para que los textos resalten sin tapar la foto */
     .container::after {
       content: "";
       position: absolute;
       inset: 0;
-      background: linear-gradient(180deg, rgba(4, 21, 36, 0.42) 0%, rgba(4, 21, 36, 0.28) 50%, rgba(4, 21, 36, 0.48) 100%);
+      background: linear-gradient(180deg, rgba(4, 21, 36, 0.45) 0%, rgba(4, 21, 36, 0.22) 50%, rgba(4, 21, 36, 0.45) 100%);
       z-index: 0;
       pointer-events: none;
     }
@@ -53,7 +53,7 @@
       font-size: 20px;
       font-weight: 800;
       color: #ffffff;
-      text-shadow: 0 2px 10px rgba(0, 0, 0, 0.85);
+      text-shadow: 0 2px 10px rgba(0, 0, 0, 0.9);
       letter-spacing: 0.3px;
     }
 
@@ -80,7 +80,7 @@
       font-size: 18px;
       text-transform: capitalize;
       color: #ffffff;
-      text-shadow: 0 2px 10px rgba(0, 0, 0, 0.85);
+      text-shadow: 0 2px 10px rgba(0, 0, 0, 0.9);
     }
 
     .weekdays, .days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; text-align: center; }
@@ -88,35 +88,39 @@
       font-weight: 700;
       font-size: 13px;
       color: #ffffff;
-      text-shadow: 0 1px 6px rgba(0, 0, 0, 0.9);
+      text-shadow: 0 1px 6px rgba(0, 0, 0, 0.95);
       padding-bottom: 6px;
     }
 
+    /* Cuadros de días disponibles: transparentes para ver la piscina */
     .day {
       aspect-ratio: 1 / 1;
       display: flex;
       align-items: center;
       justify-content: center;
       border-radius: 10px;
-      background: rgba(255, 255, 255, 0.65);
-      border: 1px solid rgba(255, 255, 255, 0.75);
-      color: #0f172a;
+      background: rgba(255, 255, 255, 0.22);
+      border: 1px solid rgba(255, 255, 255, 0.55);
+      color: #ffffff;
+      text-shadow: 0 1px 6px rgba(0, 0, 0, 0.9);
       font-weight: 800;
       font-size: 16px;
       cursor: pointer;
       user-select: none;
     }
-    .day.empty { background: transparent; border: none; cursor: default; }
+    .day.empty { background: transparent; border: none; cursor: default; text-shadow: none; }
     .day.past {
-      background: rgba(15, 23, 42, 0.52);
-      border-color: rgba(255, 255, 255, 0.2);
-      color: rgba(255, 255, 255, 0.55);
+      background: rgba(15, 23, 42, 0.45);
+      border-color: rgba(255, 255, 255, 0.16);
+      color: rgba(255, 255, 255, 0.45);
+      text-shadow: none;
       cursor: not-allowed;
     }
     .day.booked {
-      background: rgba(254, 202, 202, 0.92);
-      border-color: #ef4444;
-      color: #991b1b;
+      background: rgba(239, 68, 68, 0.78);
+      border-color: #fca5a5;
+      color: #ffffff;
+      text-shadow: 0 1px 5px rgba(0, 0, 0, 0.85);
       text-decoration: line-through;
       text-decoration-thickness: 2.5px;
     }
@@ -126,7 +130,7 @@
       font-size: 12px;
       text-align: center;
       color: #ffffff;
-      text-shadow: 0 1px 6px rgba(0, 0, 0, 0.9);
+      text-shadow: 0 1px 6px rgba(0, 0, 0, 0.95);
       font-weight: 700;
     }
 
@@ -221,353 +225,4 @@
     .actions { display: flex; gap: 8px; margin-top: 16px; }
     .actions button { flex: 1; padding: 12px; border: none; border-radius: 10px; font-weight: 700; font-size: 14px; cursor: pointer; }
     .btn-save { background: #0284c7; color: #fff; }
-    .btn-save:disabled { background: #94a3b8; cursor: wait; }
-    .btn-delete { background: #ef4444; color: #fff; }
-    .btn-close { background: #e2e8f0; color: #334155; }
-
-    /* Visor de capture en pantalla completa */
-    .lightbox {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.92);
-      z-index: 200;
-      align-items: center;
-      justify-content: center;
-      padding: 16px;
-    }
-    .lightbox.active { display: flex; }
-    .lightbox img { max-width: 100%; max-height: 92vh; border-radius: 8px; }
-  </style>
-</head>
-<body>
-
-<div class="container">
-  <div class="content">
-    <h1 class="app-title">Calendario Del Oasis de Barranquilla</h1>
-
-    <header>
-      <button id="prevMonth" title="Mes anterior">&#9664;</button>
-      <h2 id="monthYear"></h2>
-      <button id="nextMonth" title="Mes siguiente">&#9654;</button>
-    </header>
-
-    <div class="weekdays">
-      <div>Dom</div><div>Lun</div><div>Mar</div><div>Mié</div><div>Jue</div><div>Vie</div><div>Sáb</div>
-    </div>
-    <div class="days" id="calendarDays"></div>
-    <div class="status-bar" id="syncStatus">Conectando con la nube...</div>
-  </div>
-</div>
-
-<!-- Modal de Reserva -->
-<div class="modal-backdrop" id="modalBackdrop">
-  <div class="modal">
-    <h3 id="modalDateTitle">Fecha</h3>
-    <div class="field">
-      <label>Nombre de la persona</label>
-      <input type="text" id="clientName" placeholder="Ej. Carlos Pérez" />
-    </div>
-    <div class="field">
-      <label>Número de teléfono</label>
-      <input type="tel" id="clientPhone" placeholder="Ej. 300-1234567" />
-    </div>
-    <div class="field">
-      <label>Notas (Día del pago, método y referencia)</label>
-      <textarea id="clientNotes" placeholder="Ej. Pagó el 15/12 por Pago Móvil - Ref: 849302"></textarea>
-    </div>
-
-    <div class="field">
-      <label>Capture del pago (Pago Móvil, transferencia, etc.)</label>
-      <label for="receiptInput" class="upload-btn" id="uploadLabel">+ Subir capture del pago</label>
-      <input type="file" id="receiptInput" accept="image/*" />
-      <div class="preview-box" id="previewBox">
-        <button type="button" class="remove-img-btn" id="removeImgBtn">Quitar foto</button>
-        <img id="receiptPreview" src="" alt="Capture de pago" />
-        <div class="zoom-hint">Toca la imagen para verla en grande</div>
-      </div>
-    </div>
-
-    <div class="actions">
-      <button class="btn-save" id="saveBtn">Guardar</button>
-      <button class="btn-delete" id="deleteBtn">Liberar</button>
-      <button class="btn-close" id="closeBtn">Cerrar</button>
-    </div>
-  </div>
-</div>
-
-<!-- Visor pantalla completa para el capture -->
-<div class="lightbox" id="lightbox" title="Toca para cerrar">
-  <img id="lightboxImg" src="" alt="Comprobante ampliado" />
-</div>
-
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-  import { getDatabase, ref, onValue, set, remove } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
-
-  const firebaseConfig = {
-    apiKey: "AIzaSyCdxQ-06sxgPet72sIxtLul0D6YGjm-uh0",
-    authDomain: "calendario-de-picina.firebaseapp.com",
-    databaseURL: "https://calendario-de-picina-default-rtdb.firebaseio.com",
-    projectId: "calendario-de-picina",
-    storageBucket: "calendario-de-picina.firebasestorage.app",
-    messagingSenderId: "921723174722",
-    appId: "1:921723174722:web:7e04a94d0f4d6dad65d2db"
-  };
-
-  const app = initializeApp(firebaseConfig);
-  const db = getDatabase(app);
-  const bookingsRef = ref(db, "reservas");
-
-  const now = new Date();
-  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const minYear = now.getFullYear();
-  const minMonth = now.getMonth();
-
-  let currentDate = new Date(minYear, minMonth, 1);
-  let bookingsData = {};
-  let selectedDateKey = null;
-  let currentReceiptBase64 = "";
-
-  const monthYearEl = document.getElementById("monthYear");
-  const calendarDaysEl = document.getElementById("calendarDays");
-  const syncStatusEl = document.getElementById("syncStatus");
-  const prevMonthBtn = document.getElementById("prevMonth");
-  const modalBackdrop = document.getElementById("modalBackdrop");
-  const modalDateTitle = document.getElementById("modalDateTitle");
-  const clientNameInput = document.getElementById("clientName");
-  const clientPhoneInput = document.getElementById("clientPhone");
-  const clientNotesInput = document.getElementById("clientNotes");
-  const receiptInput = document.getElementById("receiptInput");
-  const uploadLabel = document.getElementById("uploadLabel");
-  const previewBox = document.getElementById("previewBox");
-  const receiptPreview = document.getElementById("receiptPreview");
-  const removeImgBtn = document.getElementById("removeImgBtn");
-  const saveBtn = document.getElementById("saveBtn");
-  const deleteBtn = document.getElementById("deleteBtn");
-  const lightbox = document.getElementById("lightbox");
-  const lightboxImg = document.getElementById("lightboxImg");
-
-  function isBeforeCurrentMonth(year, month) {
-    return year < minYear || (year === minYear && month < minMonth);
-  }
-
-  function updatePrevButtonState() {
-    prevMonthBtn.disabled = isBeforeCurrentMonth(currentDate.getFullYear(), currentDate.getMonth() - 1);
-  }
-
-  async function cleanPastBookings(data) {
-    for (const dateKey of Object.keys(data)) {
-      const parts = dateKey.split("-");
-      if (parts.length === 3) {
-        const bookingDate = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
-        if (bookingDate < todayStart) {
-          await remove(ref(db, `reservas/${dateKey}`));
-        }
-      }
-    }
-  }
-
-  onValue(bookingsRef, (snapshot) => {
-    const rawData = snapshot.val() || {};
-    cleanPastBookings(rawData);
-    bookingsData = rawData;
-    syncStatusEl.textContent = "Sincronizado en tiempo real";
-    renderCalendar();
-  });
-
-  function renderCalendar() {
-    calendarDaysEl.innerHTML = "";
-    const year = currentDate.getFullYear();
-    const month = currentDate.getMonth();
-
-    updatePrevButtonState();
-
-    const monthName = new Date(year, month).toLocaleDateString("es-ES", { month: "long", year: "numeric" });
-    monthYearEl.textContent = monthName;
-
-    const firstDayIndex = new Date(year, month, 1).getDay();
-    const daysInMonth = new Date(year, month + 1, 0).getDate();
-
-    for (let i = 0; i < firstDayIndex; i++) {
-      const emptyDiv = document.createElement("div");
-      emptyDiv.className = "day empty";
-      calendarDaysEl.appendChild(emptyDiv);
-    }
-
-    for (let day = 1; day <= daysInMonth; day++) {
-      const dateKey = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
-      const dayDate = new Date(year, month, day);
-      const isPastDay = dayDate < todayStart;
-
-      const dayDiv = document.createElement("div");
-      dayDiv.className = "day";
-      dayDiv.textContent = day;
-
-      if (isPastDay) {
-        dayDiv.classList.add("past");
-      } else {
-        if (bookingsData[dateKey]) {
-          dayDiv.classList.add("booked");
-        }
-        dayDiv.addEventListener("click", () => openModal(dateKey, day, monthName));
-      }
-
-      calendarDaysEl.appendChild(dayDiv);
-    }
-  }
-
-  function setReceiptUI(base64Str) {
-    currentReceiptBase64 = base64Str || "";
-    if (currentReceiptBase64) {
-      receiptPreview.src = currentReceiptBase64;
-      previewBox.classList.add("visible");
-      uploadLabel.textContent = "Cambiar capture del pago";
-    } else {
-      receiptPreview.src = "";
-      previewBox.classList.remove("visible");
-      uploadLabel.textContent = "+ Subir capture del pago";
-    }
-    receiptInput.value = "";
-  }
-
-  function compressImage(file) {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const img = new Image();
-        img.onload = () => {
-          const maxDim = 950;
-          let width = img.width;
-          let height = img.height;
-          if (width > maxDim || height > maxDim) {
-            if (width > height) {
-              height = Math.round((height * maxDim) / width);
-              width = maxDim;
-            } else {
-              width = Math.round((width * maxDim) / height);
-              height = maxDim;
-            }
-          }
-          const canvas = document.createElement("canvas");
-          canvas.width = width;
-          canvas.height = height;
-          const ctx = canvas.getContext("2d");
-          ctx.drawImage(img, 0, 0, width, height);
-          resolve(canvas.toDataURL("image/jpeg", 0.72));
-        };
-        img.onerror = reject;
-        img.src = e.target.result;
-      };
-      reader.onerror = reject;
-      reader.readAsDataURL(file);
-    });
-  }
-
-  receiptInput.addEventListener("change", async (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    uploadLabel.textContent = "Procesando capture...";
-    try {
-      const compressed = await compressImage(file);
-      setReceiptUI(compressed);
-    } catch {
-      alert("No se pudo cargar esa imagen. Intenta con otra.");
-      setReceiptUI("");
-    }
-  });
-
-  removeImgBtn.addEventListener("click", () => {
-    setReceiptUI("");
-  });
-
-  receiptPreview.addEventListener("click", () => {
-    if (currentReceiptBase64) {
-      lightboxImg.src = currentReceiptBase64;
-      lightbox.classList.add("active");
-    }
-  });
-
-  lightbox.addEventListener("click", () => {
-    lightbox.classList.remove("active");
-    lightboxImg.src = "";
-  });
-
-  function openModal(dateKey, day, monthName) {
-    selectedDateKey = dateKey;
-    modalDateTitle.textContent = `${day} de ${monthName}`;
-    const existing = bookingsData[dateKey];
-
-    if (existing) {
-      clientNameInput.value = existing.name || "";
-      clientPhoneInput.value = existing.phone || "";
-      clientNotesInput.value = existing.notes || "";
-      setReceiptUI(existing.receipt || "");
-      deleteBtn.style.display = "block";
-    } else {
-      clientNameInput.value = "";
-      clientPhoneInput.value = "";
-      clientNotesInput.value = "";
-      setReceiptUI("");
-      deleteBtn.style.display = "none";
-    }
-    modalBackdrop.classList.add("active");
-  }
-
-  function closeModal() {
-    modalBackdrop.classList.remove("active");
-    selectedDateKey = null;
-  }
-
-  saveBtn.addEventListener("click", async () => {
-    if (!selectedDateKey) return;
-    const name = clientNameInput.value.trim();
-    const phone = clientPhoneInput.value.trim();
-    const notes = clientNotesInput.value.trim();
-
-    if (!name) {
-      alert("Escribe al menos el nombre de la persona.");
-      return;
-    }
-
-    saveBtn.disabled = true;
-    saveBtn.textContent = "Guardando...";
-    try {
-      await set(ref(db, `reservas/${selectedDateKey}`), {
-        name,
-        phone,
-        notes,
-        receipt: currentReceiptBase64
-      });
-      closeModal();
-    } finally {
-      saveBtn.disabled = false;
-      saveBtn.textContent = "Guardar";
-    }
-  });
-
-  deleteBtn.addEventListener("click", async () => {
-    if (!selectedDateKey) return;
-    if (confirm("¿Liberar esta fecha para que quede disponible de nuevo?")) {
-      await remove(ref(db, `reservas/${selectedDateKey}`));
-      closeModal();
-    }
-  });
-
-  document.getElementById("closeBtn").addEventListener("click", closeModal);
-  prevMonthBtn.addEventListener("click", () => {
-    const prevMonthDate = new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1);
-    if (!isBeforeCurrentMonth(prevMonthDate.getFullYear(), prevMonthDate.getMonth())) {
-      currentDate = prevMonthDate;
-      renderCalendar();
-    }
-  });
-  document.getElementById("nextMonth").addEventListener("click", () => {
-    currentDate = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1);
-    renderCalendar();
-  });
-
-  renderCalendar();
-</script>
-</body>
-</html>
+    .
