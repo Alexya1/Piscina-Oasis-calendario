@@ -6,6 +6,8 @@
   <meta name="theme-color" content="#0284c7" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <link rel="manifest" href="./manifest.json" />
+  <link rel="apple-touch-icon" href="./piscina.jpg" />
   <title>Calendario Del Oasis de Barranquilla</title>
   <style>
     * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
@@ -22,7 +24,6 @@
       background-color: #062840;
     }
 
-    /* Foto de la piscina de fondo */
     .container::before {
       content: "";
       position: absolute;
@@ -35,7 +36,6 @@
       pointer-events: none;
     }
 
-    /* Capa suave para que los textos resalten sin tapar la foto */
     .container::after {
       content: "";
       position: absolute;
@@ -92,7 +92,6 @@
       padding-bottom: 6px;
     }
 
-    /* Cuadros de días disponibles: transparentes para ver la piscina */
     .day {
       aspect-ratio: 1 / 1;
       display: flex;
@@ -134,7 +133,6 @@
       font-weight: 700;
     }
 
-    /* Ventana emergente (Modal) */
     .modal-backdrop {
       display: none;
       position: fixed;
@@ -169,7 +167,6 @@
     }
     .field textarea { resize: vertical; min-height: 70px; }
 
-    /* Subida y vista previa del capture */
     .upload-btn {
       display: inline-block;
       width: 100%;
@@ -225,4 +222,78 @@
     .actions { display: flex; gap: 8px; margin-top: 16px; }
     .actions button { flex: 1; padding: 12px; border: none; border-radius: 10px; font-weight: 700; font-size: 14px; cursor: pointer; }
     .btn-save { background: #0284c7; color: #fff; }
-    .
+    .btn-save:disabled { background: #94a3b8; cursor: wait; }
+    .btn-delete { background: #ef4444; color: #fff; }
+    .btn-close { background: #e2e8f0; color: #334155; }
+
+    .lightbox {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.92);
+      z-index: 200;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+    .lightbox.active { display: flex; }
+    .lightbox img { max-width: 100%; max-height: 92vh; border-radius: 8px; }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <div class="content">
+    <h1 class="app-title">Calendario Del Oasis de Barranquilla</h1>
+
+    <header>
+      <button id="prevMonth" title="Mes anterior">&#9664;</button>
+      <h2 id="monthYear"></h2>
+      <button id="nextMonth" title="Mes siguiente">&#9654;</button>
+    </header>
+
+    <div class="weekdays">
+      <div>Dom</div><div>Lun</div><div>Mar</div><div>Mié</div><div>Jue</div><div>Vie</div><div>Sáb</div>
+    </div>
+    <div class="days" id="calendarDays"></div>
+    <div class="status-bar" id="syncStatus">Conectando con la nube...</div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="modalBackdrop">
+  <div class="modal">
+    <h3 id="modalDateTitle">Fecha</h3>
+    <div class="field">
+      <label>Nombre de la persona</label>
+      <input type="text" id="clientName" placeholder="Ej. Carlos Pérez" />
+    </div>
+    <div class="field">
+      <label>Número de teléfono</label>
+      <input type="tel" id="clientPhone" placeholder="Ej. 300-1234567" />
+    </div>
+    <div class="field">
+      <label>Notas (Día del pago, método y referencia)</label>
+      <textarea id="clientNotes" placeholder="Ej. Pagó el 15/12 por Pago Móvil - Ref: 849302"></textarea>
+    </div>
+
+    <div class="field">
+      <label>Capture del pago (Pago Móvil, transferencia, etc.)</label>
+      <label for="receiptInput" class="upload-btn" id="uploadLabel">+ Subir capture del pago</label>
+      <input type="file" id="receiptInput" accept="image/*" />
+      <div class="preview-box" id="previewBox">
+        <button type="button" class="remove-img-btn" id="removeImgBtn">Quitar foto</button>
+        <img id="receiptPreview" src="" alt="Capture de pago" />
+        <div class="zoom-hint">Toca la imagen para verla en grande</div>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button class="btn-save" id="saveBtn">Guardar</button>
+      <button class="btn-delete" id="deleteBtn">Liberar</button>
+      <button class="btn-close" id="closeBtn">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<div class="lightbox" id="lightbox" title="Toca para cerrar">
+  <img id="lightboxImg"
