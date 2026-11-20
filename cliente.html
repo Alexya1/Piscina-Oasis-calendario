@@ -4,7 +4,15 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <meta name="theme-color" content="#0284c7" />
-  <title>Disponibilidad - Oasis de Barranquilla</title>
+  <title>Fechas Disponibles - Oasis de Barranquilla</title>
+  <meta name="description" content="Fechas Disponibles - Oasis de Barranquilla" />
+
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="Fechas Disponibles - Oasis de Barranquilla" />
+  <meta property="og:description" content="Fechas Disponibles - Oasis de Barranquilla" />
+  <meta property="og:image" content="https://alexya1.github.io/Piscina-Oasis-calendario/piscina.jpg" />
+  <meta property="og:url" content="https://alexya1.github.io/Piscina-Oasis-calendario/cliente.html" />
+
   <style>
     * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
     html, body {
@@ -33,7 +41,7 @@
       content: "";
       position: absolute;
       inset: 0;
-      background-image: url("./piscina.jpg");
+      background-image: url("https://alexya1.github.io/Piscina-Oasis-calendario/piscina.jpg");
       background-size: cover;
       background-position: center;
       opacity: 0.85;
@@ -182,16 +190,8 @@
       padding: 20px;
       box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
     }
-    .modal h3 {
-      margin: 0 0 6px 0;
-      color: #0284c7;
-      font-size: 18px;
-    }
-    .modal p {
-      margin: 0 0 14px 0;
-      font-size: 14px;
-      color: #475569;
-    }
+    .modal h3 { margin: 0 0 6px 0; color: #0284c7; font-size: 18px; }
+    .modal p { margin: 0 0 14px 0; font-size: 14px; color: #475569; }
     .field label {
       display: block;
       font-size: 13px;
@@ -207,9 +207,7 @@
       font-size: 15px;
       outline: none;
     }
-    .field input[type="text"]:focus {
-      border-color: #0284c7;
-    }
+    .field input[type="text"]:focus { border-color: #0284c7; }
 
     .actions { display: flex; gap: 8px; margin-top: 16px; }
     .actions button {
@@ -221,196 +219,4 @@
       font-size: 14px;
       cursor: pointer;
     }
-    .btn-whatsapp { background: #16a34a; color: #ffffff; }
-    .btn-close { background: #e2e8f0; color: #334155; max-width: 100px; }
-  </style>
-</head>
-<body>
-
-<div class="container">
-  <div class="content">
-    <h1 class="app-title">Calendario Del Oasis de Barranquilla</h1>
-    <p class="subtitle-hint">Toca un día disponible para apartarlo por WhatsApp</p>
-
-    <header>
-      <button id="prevMonth" title="Mes anterior">&#9664;</button>
-      <h2 id="monthYear"></h2>
-      <button id="nextMonth" title="Mes siguiente">&#9654;</button>
-    </header>
-
-    <div class="weekdays">
-      <div>Dom</div><div>Lun</div><div>Mar</div><div>Mié</div><div>Jue</div><div>Vie</div><div>Sáb</div>
-    </div>
-    <div class="days" id="calendarDays"></div>
-
-    <div class="legend">
-      <span><i class="dot free"></i> Disponible</span>
-      <span><i class="dot busy"></i> Ocupado</span>
-    </div>
-    <div class="status-bar" id="syncStatus">Cargando fechas disponibles...</div>
-  </div>
-</div>
-
-<div class="modal-backdrop" id="modalBackdrop">
-  <div class="modal">
-    <h3 id="modalDateTitle">Fecha seleccionada</h3>
-    <p>Escribe tu nombre para enviar tu solicitud por WhatsApp:</p>
-    <div class="field">
-      <label for="guestName">Tu nombre</label>
-      <input type="text" id="guestName" placeholder="Ej. María Gómez" autocomplete="name" />
-    </div>
-    <div class="actions">
-      <button class="btn-whatsapp" id="sendWhatsappBtn">Enviar por WhatsApp</button>
-      <button class="btn-close" id="closeBtn">Cancelar</button>
-    </div>
-  </div>
-</div>
-
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-  import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
-
-  // CAMBIA ESTE NÚMERO POR TU WHATSAPP (código de país + número, sin + ni espacios)
-  const WHATSAPP_NUMBER = "584124342558";
-
-  const firebaseConfig = {
-    apiKey: "AIzaSyCdxQ-06sxgPet72sIxtLul0D6YGjm-uh0",
-    authDomain: "calendario-de-picina.firebaseapp.com",
-    databaseURL: "https://calendario-de-picina-default-rtdb.firebaseio.com",
-    projectId: "calendario-de-picina",
-    storageBucket: "calendario-de-picina.firebasestorage.app",
-    messagingSenderId: "921723174722",
-    appId: "1:921723174722:web:7e04a94d0f4d6dad65d2db"
-  };
-
-  const monthYearEl = document.getElementById("monthYear");
-  const calendarDaysEl = document.getElementById("calendarDays");
-  const syncStatusEl = document.getElementById("syncStatus");
-  const prevMonthBtn = document.getElementById("prevMonth");
-  const modalBackdrop = document.getElementById("modalBackdrop");
-  const modalDateTitle = document.getElementById("modalDateTitle");
-  const guestNameInput = document.getElementById("guestName");
-  const sendWhatsappBtn = document.getElementById("sendWhatsappBtn");
-
-  const now = new Date();
-  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const minYear = now.getFullYear();
-  const minMonth = now.getMonth();
-
-  let currentDate = new Date(minYear, minMonth, 1);
-  let bookingsData = {};
-  let selectedDateText = "";
-
-  function isBeforeCurrentMonth(year, month) {
-    return year < minYear || (year === minYear && month < minMonth);
-  }
-
-  function updatePrevButtonState() {
-    prevMonthBtn.disabled = isBeforeCurrentMonth(currentDate.getFullYear(), currentDate.getMonth() - 1);
-  }
-
-  function renderCalendar() {
-    calendarDaysEl.innerHTML = "";
-    const year = currentDate.getFullYear();
-    const month = currentDate.getMonth();
-
-    updatePrevButtonState();
-
-    const monthName = new Date(year, month).toLocaleDateString("es-ES", { month: "long", year: "numeric" });
-    monthYearEl.textContent = monthName;
-
-    const firstDayIndex = new Date(year, month, 1).getDay();
-    const daysInMonth = new Date(year, month + 1, 0).getDate();
-
-    for (let i = 0; i < firstDayIndex; i++) {
-      const emptyDiv = document.createElement("div");
-      emptyDiv.className = "day empty";
-      calendarDaysEl.appendChild(emptyDiv);
-    }
-
-    for (let day = 1; day <= daysInMonth; day++) {
-      const dateKey = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
-      const dayDate = new Date(year, month, day);
-      const isPastDay = dayDate < todayStart;
-      const isBooked = Boolean(bookingsData[dateKey]);
-
-      const dayDiv = document.createElement("div");
-      dayDiv.className = "day";
-      dayDiv.textContent = day;
-
-      if (isPastDay) {
-        dayDiv.classList.add("past");
-      } else if (isBooked) {
-        dayDiv.classList.add("booked");
-        dayDiv.title = "Día ocupado";
-      } else {
-        dayDiv.addEventListener("click", () => {
-          selectedDateText = `${day} de ${monthName}`;
-          modalDateTitle.textContent = selectedDateText;
-          guestNameInput.value = "";
-          modalBackdrop.classList.add("active");
-          setTimeout(() => guestNameInput.focus(), 80);
-        });
-      }
-
-      calendarDaysEl.appendChild(dayDiv);
-    }
-  }
-
-  renderCalendar();
-
-  const app = initializeApp(firebaseConfig);
-  const db = getDatabase(app);
-  const bookingsRef = ref(db, "reservas");
-
-  onValue(bookingsRef, (snapshot) => {
-    bookingsData = snapshot.val() || {};
-    syncStatusEl.textContent = "Disponibilidad actualizada en tiempo real";
-    renderCalendar();
-  }, () => {
-    syncStatusEl.textContent = "No se pudo cargar la disponibilidad";
-  });
-
-  function closeModal() {
-    modalBackdrop.classList.remove("active");
-  }
-
-  sendWhatsappBtn.addEventListener("click", () => {
-    const name = guestNameInput.value.trim();
-    if (!name) {
-      alert("Por favor escribe tu nombre antes de continuar.");
-      guestNameInput.focus();
-      return;
-    }
-
-    const message = `Quiero apartar la piscina para el día ${selectedDateText}. Mi nombre es ${name}`;
-    const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
-    window.location.href = url;
-  });
-
-  guestNameInput.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") {
-      sendWhatsappBtn.click();
-    }
-  });
-
-  document.getElementById("closeBtn").addEventListener("click", closeModal);
-  modalBackdrop.addEventListener("click", (e) => {
-    if (e.target === modalBackdrop) closeModal();
-  });
-
-  prevMonthBtn.addEventListener("click", () => {
-    const prevMonthDate = new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1);
-    if (!isBeforeCurrentMonth(prevMonthDate.getFullYear(), prevMonthDate.getMonth())) {
-      currentDate = prevMonthDate;
-      renderCalendar();
-    }
-  });
-
-  document.getElementById("nextMonth").addEventListener("click", () => {
-    currentDate = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1);
-    renderCalendar();
-  });
-</script>
-</body>
-</html>
+    .btn-whatsapp { background:
