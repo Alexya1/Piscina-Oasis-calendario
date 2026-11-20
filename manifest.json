@@ -2,22 +2,19 @@
   "name": "Calendario Del Oasis de Barranquilla",
   "short_name": "Oasis Piscina",
   "start_url": "./",
-  "scope": "./",
-  "display": "fullscreen",
+  "display": "standalone",
   "background_color": "#041524",
   "theme_color": "#0284c7",
   "icons": [
     {
       "src": "./piscina.jpg",
       "sizes": "192x192",
-      "type": "image/jpeg",
-      "purpose": "any"
+      "type": "image/jpeg"
     },
     {
       "src": "./piscina.jpg",
       "sizes": "512x512",
-      "type": "image/jpeg",
-      "purpose": "any"
+      "type": "image/jpeg"
     }
   ]
 }
