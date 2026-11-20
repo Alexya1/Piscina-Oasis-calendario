@@ -191,6 +191,7 @@
     }
     .modal h3 { margin: 0 0 6px 0; color: #0284c7; font-size: 18px; }
     .modal p { margin: 0 0 14px 0; font-size: 14px; color: #475569; }
+    .field { margin-bottom: 12px; }
     .field label {
       display: block;
       font-size: 13px;
@@ -198,7 +199,7 @@
       margin-bottom: 6px;
       color: #334155;
     }
-    .field input[type="text"] {
+    .field input[type="text"], .field input[type="tel"] {
       width: 100%;
       padding: 11px;
       border: 1.5px solid #cbd5e1;
@@ -206,7 +207,7 @@
       font-size: 15px;
       outline: none;
     }
-    .field input[type="text"]:focus { border-color: #0284c7; }
+    .field input:focus { border-color: #0284c7; }
 
     .actions { display: flex; gap: 8px; margin-top: 16px; }
     .actions button {
@@ -219,6 +220,7 @@
       cursor: pointer;
     }
     .btn-whatsapp { background: #16a34a; color: #ffffff; }
+    .btn-whatsapp:disabled { background: #94a3b8; cursor: wait; }
     .btn-close { background: #e2e8f0; color: #334155; max-width: 100px; }
   </style>
 </head>
@@ -251,39 +253,45 @@
 <div class="modal-backdrop" id="modalBackdrop">
   <div class="modal">
     <h3 id="modalDateTitle">Fecha seleccionada</h3>
-    <p>Escribe tu nombre para enviar tu solicitud por WhatsApp:</p>
+    <p>Completa tus datos para enviar tu solicitud:</p>
     <div class="field">
       <label for="guestName">Tu nombre</label>
       <input type="text" id="guestName" placeholder="Ej. María Gómez" autocomplete="name" />
     </div>
+    <div class="field">
+      <label for="guestPhone">Tu número de teléfono</label>
+      <input type="tel" id="guestPhone" placeholder="Ej. 0412-1234567" autocomplete="tel" />
+    </div>
     <div class="actions">
-      <button class="btn-whatsapp" id="sendWhatsappBtn">Enviar por WhatsApp</button>
+      <button class="btn-whatsapp" id="sendWhatsappBtn">Enviar solicitud</button>
       <button class="btn-close" id="closeBtn">Cancelar</button>
     </div>
   </div>
 </div>
 
-<script type="module">
-  const WHATSAPP_NUMBER = "584124342558";
-  const DB_URL = "https://calendario-de-picina-default-rtdb.firebaseio.com/reservas.json";
+<script>
+  var WHATSAPP_NUMBER = "584124342558";
+  var DB_BASE = "https://calendario-de-picina-default-rtdb.firebaseio.com";
 
-  const monthYearEl = document.getElementById("monthYear");
-  const calendarDaysEl = document.getElementById("calendarDays");
-  const syncStatusEl = document.getElementById("syncStatus");
-  const prevMonthBtn = document.getElementById("prevMonth");
-  const modalBackdrop = document.getElementById("modalBackdrop");
-  const modalDateTitle = document.getElementById("modalDateTitle");
-  const guestNameInput = document.getElementById("guestName");
-  const sendWhatsappBtn = document.getElementById("sendWhatsappBtn");
+  var monthYearEl = document.getElementById("monthYear");
+  var calendarDaysEl = document.getElementById("calendarDays");
+  var syncStatusEl = document.getElementById("syncStatus");
+  var prevMonthBtn = document.getElementById("prevMonth");
+  var modalBackdrop = document.getElementById("modalBackdrop");
+  var modalDateTitle = document.getElementById("modalDateTitle");
+  var guestNameInput = document.getElementById("guestName");
+  var guestPhoneInput = document.getElementById("guestPhone");
+  var sendWhatsappBtn = document.getElementById("sendWhatsappBtn");
 
-  const now = new Date();
-  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const minYear = now.getFullYear();
-  const minMonth = now.getMonth();
+  var now = new Date();
+  var todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  var minYear = now.getFullYear();
+  var minMonth = now.getMonth();
 
-  let currentDate = new Date(minYear, minMonth, 1);
-  let bookingsData = {};
-  let selectedDateText = "";
+  var currentDate = new Date(minYear, minMonth, 1);
+  var bookingsData = {};
+  var selectedDateKey = "";
+  var selectedDateText = "";
 
   function isBeforeCurrentMonth(year, month) {
     return year < minYear || (year === minYear && month < minMonth);
@@ -295,30 +303,30 @@
 
   function renderCalendar() {
     calendarDaysEl.innerHTML = "";
-    const year = currentDate.getFullYear();
-    const month = currentDate.getMonth();
+    var year = currentDate.getFullYear();
+    var month = currentDate.getMonth();
 
     updatePrevButtonState();
 
-    const monthName = new Date(year, month).toLocaleDateString("es-ES", { month: "long", year: "numeric" });
+    var monthName = new Date(year, month).toLocaleDateString("es-ES", { month: "long", year: "numeric" });
     monthYearEl.textContent = monthName;
 
-    const firstDayIndex = new Date(year, month, 1).getDay();
-    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    var firstDayIndex = new Date(year, month, 1).getDay();
+    var daysInMonth = new Date(year, month + 1, 0).getDate();
 
-    for (let i = 0; i < firstDayIndex; i++) {
-      const emptyDiv = document.createElement("div");
+    for (var i = 0; i < firstDayIndex; i++) {
+      var emptyDiv = document.createElement("div");
       emptyDiv.className = "day empty";
       calendarDaysEl.appendChild(emptyDiv);
     }
 
-    for (let day = 1; day <= daysInMonth; day++) {
-      const dateKey = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
-      const dayDate = new Date(year, month, day);
-      const isPastDay = dayDate < todayStart;
-      const isBooked = Boolean(bookingsData[dateKey]);
+    for (var day = 1; day <= daysInMonth; day++) {
+      var dateKey = year + "-" + String(month + 1).padStart(2, "0") + "-" + String(day).padStart(2, "0");
+      var dayDate = new Date(year, month, day);
+      var isPastDay = dayDate < todayStart;
+      var isBooked = Boolean(bookingsData[dateKey]);
 
-      const dayDiv = document.createElement("div");
+      var dayDiv = document.createElement("div");
       dayDiv.className = "day";
       dayDiv.textContent = day;
 
@@ -328,13 +336,17 @@
         dayDiv.classList.add("booked");
         dayDiv.title = "Día ocupado";
       } else {
-        dayDiv.addEventListener("click", () => {
-          selectedDateText = `${day} de ${monthName}`;
-          modalDateTitle.textContent = selectedDateText;
-          guestNameInput.value = "";
-          modalBackdrop.classList.add("active");
-          setTimeout(() => guestNameInput.focus(), 80);
-        });
+        (function(dKey, d, mName) {
+          dayDiv.addEventListener("click", function() {
+            selectedDateKey = dKey;
+            selectedDateText = d + " de " + mName;
+            modalDateTitle.textContent = selectedDateText;
+            guestNameInput.value = "";
+            guestPhoneInput.value = "";
+            modalBackdrop.classList.add("active");
+            setTimeout(function() { guestNameInput.focus(); }, 80);
+          });
+        })(dateKey, day, monthName);
       }
 
       calendarDaysEl.appendChild(dayDiv);
@@ -343,18 +355,18 @@
 
   renderCalendar();
 
-  async function loadBookings() {
-    try {
-      const res = await fetch(DB_URL, { cache: "no-store" });
-      if (!res.ok) throw new Error("HTTP " + res.status);
-      const data = await res.json();
-      bookingsData = data || {};
-      syncStatusEl.textContent = "Disponibilidad actualizada";
-      renderCalendar();
-    } catch {
-      syncStatusEl.textContent = "Mostrando calendario (revisa conexión)";
-      renderCalendar();
-    }
+  function loadBookings() {
+    fetch(DB_BASE + "/reservas.json?t=" + Date.now())
+      .then(function(res) { return res.json(); })
+      .then(function(data) {
+        bookingsData = data || {};
+        syncStatusEl.textContent = "Disponibilidad actualizada";
+        renderCalendar();
+      })
+      .catch(function() {
+        syncStatusEl.textContent = "Mostrando calendario";
+        renderCalendar();
+      });
   }
 
   loadBookings();
@@ -364,39 +376,63 @@
     modalBackdrop.classList.remove("active");
   }
 
-  sendWhatsappBtn.addEventListener("click", () => {
-    const name = guestNameInput.value.trim();
+  sendWhatsappBtn.addEventListener("click", function() {
+    var name = guestNameInput.value.trim();
+    var phone = guestPhoneInput.value.trim();
+
     if (!name) {
-      alert("Por favor escribe tu nombre antes de continuar.");
+      alert("Por favor escribe tu nombre.");
       guestNameInput.focus();
       return;
     }
-
-    const message = `Quiero apartar la piscina para el día ${selectedDateText}. Mi nombre es ${name}`;
-    const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
-    window.location.href = url;
-  });
-
-  guestNameInput.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") {
-      sendWhatsappBtn.click();
+    if (!phone) {
+      alert("Por favor escribe tu número de teléfono.");
+      guestPhoneInput.focus();
+      return;
     }
+
+    sendWhatsappBtn.disabled = true;
+    sendWhatsappBtn.textContent = "Enviando...";
+
+    var reqId = selectedDateKey + "_" + Date.now();
+    var payload = {
+      dateKey: selectedDateKey,
+      dateText: selectedDateText,
+      name: name,
+      phone: phone,
+      createdAt: new Date().toISOString()
+    };
+
+    var message = "Quiero apartar la piscina para el día " + selectedDateText + ". Mi nombre es " + name + " y mi teléfono es " + phone;
+    var waUrl = "https://wa.me/" + WHATSAPP_NUMBER + "?text=" + encodeURIComponent(message);
+
+    fetch(DB_BASE + "/solicitudes/" + encodeURIComponent(reqId) + ".json", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    })
+      .then(function() {
+        window.location.href = waUrl;
+      })
+      .catch(function() {
+        window.location.href = waUrl;
+      });
   });
 
   document.getElementById("closeBtn").addEventListener("click", closeModal);
-  modalBackdrop.addEventListener("click", (e) => {
+  modalBackdrop.addEventListener("click", function(e) {
     if (e.target === modalBackdrop) closeModal();
   });
 
-  prevMonthBtn.addEventListener("click", () => {
-    const prevMonthDate = new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1);
+  prevMonthBtn.addEventListener("click", function() {
+    var prevMonthDate = new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1);
     if (!isBeforeCurrentMonth(prevMonthDate.getFullYear(), prevMonthDate.getMonth())) {
       currentDate = prevMonthDate;
       renderCalendar();
     }
   });
 
-  document.getElementById("nextMonth").addEventListener("click", () => {
+  document.getElementById("nextMonth").addEventListener("click", function() {
     currentDate = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1);
     renderCalendar();
   });
