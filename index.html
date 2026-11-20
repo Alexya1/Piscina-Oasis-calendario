@@ -478,3 +478,87 @@
       lightbox.classList.add("active");
     }
   });
+
+  lightbox.addEventListener("click", () => {
+    lightbox.classList.remove("active");
+    lightboxImg.src = "";
+  });
+
+  function openModal(dateKey, day, monthName) {
+    selectedDateKey = dateKey;
+    modalDateTitle.textContent = `${day} de ${monthName}`;
+    const existing = bookingsData[dateKey];
+
+    if (existing) {
+      clientNameInput.value = existing.name || "";
+      clientPhoneInput.value = existing.phone || "";
+      clientNotesInput.value = existing.notes || "";
+      setReceiptUI(existing.receipt || "");
+      deleteBtn.style.display = "block";
+    } else {
+      clientNameInput.value = "";
+      clientPhoneInput.value = "";
+      clientNotesInput.value = "";
+      setReceiptUI("");
+      deleteBtn.style.display = "none";
+    }
+    modalBackdrop.classList.add("active");
+  }
+
+  function closeModal() {
+    modalBackdrop.classList.remove("active");
+    selectedDateKey = null;
+  }
+
+  saveBtn.addEventListener("click", async () => {
+    if (!selectedDateKey) return;
+    const name = clientNameInput.value.trim();
+    const phone = clientPhoneInput.value.trim();
+    const notes = clientNotesInput.value.trim();
+
+    if (!name) {
+      alert("Escribe al menos el nombre de la persona.");
+      return;
+    }
+
+    saveBtn.disabled = true;
+    saveBtn.textContent = "Guardando...";
+    try {
+      await set(ref(db, `reservas/${selectedDateKey}`), {
+        name,
+        phone,
+        notes,
+        receipt: currentReceiptBase64
+      });
+      closeModal();
+    } finally {
+      saveBtn.disabled = false;
+      saveBtn.textContent = "Guardar";
+    }
+  });
+
+  deleteBtn.addEventListener("click", async () => {
+    if (!selectedDateKey) return;
+    if (confirm("¿Liberar esta fecha para que quede disponible de nuevo?")) {
+      await remove(ref(db, `reservas/${selectedDateKey}`));
+      closeModal();
+    }
+  });
+
+  document.getElementById("closeBtn").addEventListener("click", closeModal);
+  prevMonthBtn.addEventListener("click", () => {
+    const prevMonthDate = new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1);
+    if (!isBeforeCurrentMonth(prevMonthDate.getFullYear(), prevMonthDate.getMonth())) {
+      currentDate = prevMonthDate;
+      renderCalendar();
+    }
+  });
+  document.getElementById("nextMonth").addEventListener("click", () => {
+    currentDate = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1);
+    renderCalendar();
+  });
+
+  renderCalendar();
+</script>
+</body>
+</html>
